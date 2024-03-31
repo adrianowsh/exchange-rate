@@ -30,6 +30,7 @@ const context_time_duration = 300 * time.Millisecond
 
 func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), context_time_duration)
+
 	defer cancel()
 
 	req, err := http.NewRequestWithContext(ctx, "GET", url_exchange_rate, nil)
