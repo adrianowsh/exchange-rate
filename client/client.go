@@ -54,6 +54,7 @@ func main() {
 	if err != nil {
 		panic(fmt.Sprintf("error on create txt => %v", err))
 	}
+
 	defer file.Close()
 
 	for _, exchangeRate := range exchangesRates {
