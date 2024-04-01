@@ -27,7 +27,6 @@ func main() {
 
 func GetRegisteredExchangeRateHandler(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), context_time_duration)
-
 	defer cancel()
 
 	db, err := sql.Open("sqlite3", database_name)
