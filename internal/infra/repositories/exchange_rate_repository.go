@@ -3,10 +3,13 @@ package repositories
 import (
 	"context"
 	"database/sql"
+	"time"
 
 	"github.com/adrianowsh/exchange-rate-api/internal/dto"
 	"github.com/adrianowsh/exchange-rate-api/internal/infra/db"
 )
+
+const context_time_duration_to_database = 10 * time.Millisecond
 
 type ExchangeRateRepository struct {
 	DB *sql.DB
@@ -16,7 +19,11 @@ func NewExchangeRateRepository(db *sql.DB) *ExchangeRateRepository {
 	return &ExchangeRateRepository{DB: db}
 }
 
-func (repo *ExchangeRateRepository) Create(ctx context.Context, dto dto.UsdBrlDTO) error {
+func (repo *ExchangeRateRepository) Create(dto dto.UsdBrlDTO) error {
+	ctx, cancel := context.WithTimeout(context.Background(), context_time_duration_to_database)
+
+	defer cancel()
+
 	queries := db.New(repo.DB)
 	err := queries.CreateExchangeRate(ctx, db.CreateExchangeRateParams{
 		Code:       sql.NullString{String: dto.Code, Valid: true},

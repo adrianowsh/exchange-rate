@@ -30,7 +30,6 @@ const context_time_duration = 300 * time.Millisecond
 
 func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), context_time_duration)
-
 	defer cancel()
 
 	req, err := http.NewRequestWithContext(ctx, "GET", url_exchange_rate, nil)
@@ -44,7 +43,6 @@ func main() {
 	}
 
 	body, _ := io.ReadAll(res.Body)
-
 	var exchangesRates []ExchangeRate
 	err = json.Unmarshal([]byte(body), &exchangesRates)
 	if err != nil {
@@ -55,7 +53,6 @@ func main() {
 	if err != nil {
 		panic(fmt.Sprintf("error on create txt => %v", err))
 	}
-
 	defer file.Close()
 
 	for _, exchangeRate := range exchangesRates {
