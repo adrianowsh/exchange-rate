@@ -9,7 +9,7 @@ import (
 	"github.com/adrianowsh/exchange-rate-api/internal/infra/db"
 )
 
-const context_time_duration_to_database = 10 * time.Millisecond
+const context_time_duration_to_database = 10 * time.Nanosecond
 
 type ExchangeRateRepository struct {
 	DB *sql.DB

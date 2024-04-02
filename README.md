@@ -3,4 +3,4 @@ The server expose two endpoints /cotacao and /all
 The first endpoint get, registered and serve actual informations about daily exchange rate
 The second endponint list all exchange rates registered on the database.
 
-The client get the /cotacao endpoint and save the result on the txt file.
+The client read the response of the /cotacao endpoint and save the result on the txt file.
