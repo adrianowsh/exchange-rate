@@ -16,6 +16,7 @@ import (
 )
 
 const context_time_duration = 200 * time.Millisecond
+const context_time_duration_to_database = 10 * time.Millisecond
 const database_name = "file:sqlite-database.db"
 
 func main() {
@@ -26,12 +27,12 @@ func main() {
 }
 
 func GetRegisteredExchangeRateHandler(w http.ResponseWriter, r *http.Request) {
-	ctx, cancel := context.WithTimeout(context.Background(), context_time_duration)
+	ctx, cancel := context.WithTimeout(context.Background(), 200*time.Nanosecond)
 	defer cancel()
 
 	db, err := sql.Open("sqlite3", database_name)
 	if err != nil {
-		panic(fmt.Sprintf("error on database access ==> %v", err))
+		panic(fmt.Sprintf("error on database access: %v", err))
 	}
 	defer db.Close()
 
@@ -43,6 +44,7 @@ func GetRegisteredExchangeRateHandler(w http.ResponseWriter, r *http.Request) {
 	dto, err := getAll(ctx, db)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
 		return
 	}
 
@@ -75,6 +77,7 @@ func SearchExchangeRateHandler(w http.ResponseWriter, r *http.Request) {
 	dto, err := searchExchangeRateAndSave(ctx, db, currencyParam)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
 		return
 	}
 
@@ -106,8 +109,12 @@ func searchExchangeRateAndSave(ctx context.Context, db *sql.DB, currency string)
 	}
 
 	repo := repositories.NewExchangeRateRepository(db)
+
+	ctxDB, cancelDB := context.WithTimeout(context.Background(), context_time_duration_to_database)
+	defer cancelDB()
+
 	for _, result := range results {
-		saveExchangeRate(repo, result)
+		saveExchangeRate(ctxDB, repo, result)
 	}
 	return &results, nil
 }
@@ -121,8 +128,8 @@ func getAll(ctx context.Context, db *sql.DB) (*[]db.ExchangesRate, error) {
 	return &exchangeRates, nil
 }
 
-func saveExchangeRate(repo *repositories.ExchangeRateRepository, dto dto.UsdBrlDTO) error {
-	err := repo.Create(dto)
+func saveExchangeRate(ctx context.Context, repo *repositories.ExchangeRateRepository, dto dto.UsdBrlDTO) error {
+	err := repo.Create(ctx, dto)
 	if err != nil {
 		return err
 	}

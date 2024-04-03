@@ -34,24 +34,24 @@ func main() {
 
 	req, err := http.NewRequestWithContext(ctx, "GET", url_exchange_rate, nil)
 	if err != nil {
-		panic(fmt.Sprintf("error on the request => %v", err))
+		panic(fmt.Sprintf("error on the request: %v", err))
 	}
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		panic(fmt.Sprintf("error on read all body => %v", err))
+		panic(fmt.Sprintf("error on read all body: %v", err))
 	}
 
 	body, _ := io.ReadAll(res.Body)
 	var exchangesRates []ExchangeRate
 	err = json.Unmarshal([]byte(body), &exchangesRates)
 	if err != nil {
-		panic(fmt.Sprintf("error on serialized to struct => %v", err))
+		panic(fmt.Sprintf("error: %v", err))
 	}
 
 	file, err := os.Create(cotacao_file)
 	if err != nil {
-		panic(fmt.Sprintf("error on create txt => %v", err))
+		panic(fmt.Sprintf("error on create txt: %v", err))
 	}
 	defer file.Close()
 
@@ -64,6 +64,6 @@ func writeBidInformation(bid string, file *os.File) {
 	_, err := file.WriteString(fmt.Sprintf("BID: %s", bid))
 	fmt.Println("File created successfully")
 	if err != nil {
-		panic(fmt.Sprintf("error on write txt => %v", err))
+		panic(fmt.Sprintf("error on write txt: %v", err))
 	}
 }
