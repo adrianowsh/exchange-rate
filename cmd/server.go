@@ -16,7 +16,7 @@ import (
 )
 
 const context_time_duration = 200 * time.Millisecond
-const context_time_duration_to_database = 10 * time.Millisecond
+const context_time_duration_to_database = 100 * time.Millisecond
 const database_name = "file:sqlite-database.db"
 
 func main() {

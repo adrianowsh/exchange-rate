@@ -13,3 +13,8 @@ type UsdBrlDTO struct {
 	Timestamp  string `json:"tinmestamp"`
 	CreateDate string `json:"create_date"`
 }
+
+type Response struct {
+	Data string
+	Err  error
+}

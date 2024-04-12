@@ -5,9 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/adrianowsh/exchange-rate-api/internal/dto"
 )
 
 type ExchangeRate struct {
@@ -29,41 +32,76 @@ const url_exchange_rate = "http://localhost:8080/cotacao?currency=USD-BRL"
 const context_time_duration = 300 * time.Millisecond
 
 func main() {
+	ratech := make(chan dto.Response)
+
 	ctx, cancel := context.WithTimeout(context.Background(), context_time_duration)
 	defer cancel()
 
+	go func(ch chan<- dto.Response) {
+		resp, err := getResultExchangeRateApi(ctx)
+		if err != nil {
+			ch <- dto.Response{Data: "", Err: err}
+		}
+
+		ch <- dto.Response{Data: resp, Err: nil}
+	}(ratech)
+
+	select {
+	case resp := <-ratech:
+		if resp.Err != nil {
+			log.Fatalln(resp.Err)
+		} else {
+			writeBidInformation(resp.Data)
+		}
+	case <-ctx.Done():
+		log.Fatalln("context timeout")
+	}
+}
+
+func getResultExchangeRateApi(ctx context.Context) (string, error) {
+	resp, err := getExchangeRateApi(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	jsonResult, _ := json.Marshal(resp)
+	return string(jsonResult), nil
+}
+
+func getExchangeRateApi(ctx context.Context) (string, error) {
 	req, err := http.NewRequestWithContext(ctx, "GET", url_exchange_rate, nil)
 	if err != nil {
-		panic(fmt.Sprintf("error on the request: %v", err))
+		return "", err
 	}
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		panic(fmt.Sprintf("error on read all body: %v", err))
+		return "", err
 	}
 
 	body, _ := io.ReadAll(res.Body)
+
 	var exchangesRates []ExchangeRate
 	err = json.Unmarshal([]byte(body), &exchangesRates)
 	if err != nil {
-		panic(fmt.Sprintf("error: %v", err))
+		return "'", err
 	}
 
+	return exchangesRates[0].Bid, nil
+}
+
+func writeBidInformation(bid string) {
 	file, err := os.Create(cotacao_file)
 	if err != nil {
 		panic(fmt.Sprintf("error on create txt: %v", err))
 	}
 	defer file.Close()
 
-	for _, exchangeRate := range exchangesRates {
-		writeBidInformation(exchangeRate.Bid, file)
-	}
-}
+	_, err = file.WriteString(fmt.Sprintf("BID: %s", bid))
 
-func writeBidInformation(bid string, file *os.File) {
-	_, err := file.WriteString(fmt.Sprintf("BID: %s", bid))
-	fmt.Println("File created successfully")
 	if err != nil {
 		panic(fmt.Sprintf("error on write txt: %v", err))
 	}
+
+	println("file create successfully")
 }
